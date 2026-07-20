@@ -26,11 +26,6 @@ export default function GlobalErrorBoundary({ error }: { error: Error & { digest
         変わらない場合は下のボタンを押してください。
       </p>
       <Button onClick={() => window.location.reload()}>再読み込み</Button>
-      {/* 原因調査のため一時的に技術情報を表示している。原因判明後に削除する。 */}
-      <pre className="text-muted-foreground max-w-full overflow-x-auto rounded bg-black/5 p-2 text-left text-xs whitespace-pre-wrap">
-        {error.message}
-        {error.digest ? `\ndigest: ${error.digest}` : ''}
-      </pre>
     </div>
   );
 }
