@@ -5,15 +5,19 @@ import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 
 interface ActiveToggleProps {
+  id: string;
   isActive: boolean;
-  onToggle: (nextActive: boolean) => Promise<{ success: boolean; error?: string }>;
+  // Server Actionそのものの参照を渡すこと(page.tsx側でラップした無名関数を渡すと
+  // サーバー→クライアントの境界をシリアライズできずランタイムエラーになる)。
+  action: (id: string, isActive: boolean) => Promise<{ success: boolean; error?: string }>;
   activeLabel?: string;
   inactiveLabel?: string;
 }
 
 export function ActiveToggle({
+  id,
   isActive,
-  onToggle,
+  action,
   activeLabel = '有効',
   inactiveLabel = '無効',
 }: ActiveToggleProps) {
@@ -22,7 +26,7 @@ export function ActiveToggle({
 
   function handleChange(next: boolean) {
     startTransition(async () => {
-      const result = await onToggle(next);
+      const result = await action(id, next);
       if (!result.success) {
         toast.error(result.error ?? '更新に失敗しました');
         return;

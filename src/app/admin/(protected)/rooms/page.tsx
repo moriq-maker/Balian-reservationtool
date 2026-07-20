@@ -48,10 +48,11 @@ export default async function RoomsPage() {
                 <TableCell className="font-medium">{room.roomNumber}</TableCell>
                 <TableCell>
                   <ActiveToggle
+                    id={room.id}
                     isActive={room.isActive}
                     activeLabel="有効"
                     inactiveLabel="無効化済み"
-                    onToggle={(next) => setRoomActiveAction(room.id, next)}
+                    action={setRoomActiveAction}
                   />
                 </TableCell>
                 <TableCell className="text-right">

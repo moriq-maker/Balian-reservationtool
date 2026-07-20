@@ -71,10 +71,11 @@ export default async function FacilitiesPage() {
                 </TableCell>
                 <TableCell>
                   <ActiveToggle
+                    id={facility.id}
                     isActive={facility.isActive}
                     activeLabel="有効"
                     inactiveLabel="無効化済み"
-                    onToggle={(next) => setFacilityActiveAction(facility.id, next)}
+                    action={setFacilityActiveAction}
                   />
                 </TableCell>
                 <TableCell className="text-right">
