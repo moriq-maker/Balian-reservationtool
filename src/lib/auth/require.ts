@@ -45,3 +45,37 @@ export async function requireAdmin(): Promise<Extract<CurrentActor, { type: 'adm
   }
   return actor;
 }
+
+type AdminActor = Extract<CurrentActor, { type: 'admin' }>;
+type StaffOrAdminActor = Exclude<CurrentActor, { type: 'anonymous' }>;
+
+/**
+ * Server Actionの冒頭で使う権限チェック。例外を投げず戻り値で判定できるため、
+ * 呼び出し側は `if (!check.ok) return { success: false, error: check.error }` の形で
+ * 統一的にエラーハンドリングできる。
+ */
+export async function tryRequireAdmin(): Promise<
+  { ok: true; actor: AdminActor } | { ok: false; error: string }
+> {
+  try {
+    return { ok: true, actor: await requireAdmin() };
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return { ok: false, error: error.message };
+    }
+    throw error;
+  }
+}
+
+export async function tryRequireStaffOrAdmin(): Promise<
+  { ok: true; actor: StaffOrAdminActor } | { ok: false; error: string }
+> {
+  try {
+    return { ok: true, actor: (await requireStaffOrAdmin()) as StaffOrAdminActor };
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return { ok: false, error: error.message };
+    }
+    throw error;
+  }
+}
