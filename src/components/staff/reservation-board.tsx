@@ -91,7 +91,7 @@ export function ReservationBoard({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-card flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3 shadow-sm">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -150,13 +150,20 @@ export function ReservationBoard({
             facilities={categories.flatMap((c) => c.facilities)}
             rooms={rooms}
             windowDays={windowDays}
-            trigger={<Button className="h-10">新規予約</Button>}
+            trigger={
+              <Button variant="gold" className="h-10">
+                新規予約
+              </Button>
+            }
           />
         </div>
       </div>
 
       <Tabs value={activeCategoryId} onValueChange={setActiveCategoryId}>
-        <TabsList className="h-12 w-full">
+        <TabsList
+          variant="line"
+          className="border-border h-12 w-full justify-start gap-4 border-b px-1"
+        >
           {categories.map((category) => {
             const facilityIds = new Set(category.facilities.map((f) => f.id));
             const nowOccupiedCount = reservations.filter(
@@ -169,7 +176,11 @@ export function ReservationBoard({
             ).length;
             const hasVacancy = nowOccupiedCount < category.facilities.length;
             return (
-              <TabsTrigger key={category.id} value={category.id} className="h-10 flex-1 text-base">
+              <TabsTrigger
+                key={category.id}
+                value={category.id}
+                className="after:bg-gold data-active:text-foreground flex-none px-1 text-base font-semibold"
+              >
                 <span
                   className={`mr-1.5 inline-block size-2 rounded-full ${
                     hasVacancy ? 'bg-emerald-500' : 'bg-amber-500'
@@ -188,7 +199,7 @@ export function ReservationBoard({
                 このカテゴリには有効な施設がありません。
               </p>
             ) : (
-              <div className="overflow-x-auto rounded-md border">
+              <div className="bg-card overflow-x-auto rounded-lg border shadow-sm">
                 <div className="flex min-w-[480px]">
                   <div className="bg-muted/30 w-14 shrink-0 border-r pt-10">
                     <div style={{ height: `${GRID_HEIGHT_REM}rem` }} className="relative">

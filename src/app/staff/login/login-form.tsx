@@ -13,13 +13,17 @@ export function StaffLoginForm() {
   const [state, formAction, isPending] = useActionState(staffLoginAction, initialState);
 
   return (
-    <div className="bg-muted/40 flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">予約管理システム</CardTitle>
+    <div className="bg-primary flex min-h-screen items-center justify-center p-4">
+      <Card className="w-full max-w-sm overflow-visible border-none py-0">
+        <div className="bg-gold h-1.5 w-full rounded-t-xl" />
+        <CardHeader className="pt-6">
+          <p className="text-muted-foreground text-xs font-semibold tracking-[0.2em]">
+            ホテル地下施設
+          </p>
+          <CardTitle className="text-2xl font-bold tracking-tight">予約管理システム</CardTitle>
           <CardDescription>共通アクセスコード(6桁)を入力してください</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-6">
           <form action={formAction} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="code">アクセスコード</Label>
@@ -40,7 +44,13 @@ export function StaffLoginForm() {
                 {state.error}
               </p>
             ) : null}
-            <Button type="submit" size="lg" className="h-12 text-base" disabled={isPending}>
+            <Button
+              type="submit"
+              variant="gold"
+              size="lg"
+              className="h-12 text-base"
+              disabled={isPending}
+            >
               {isPending ? '確認中...' : '入室する'}
             </Button>
           </form>

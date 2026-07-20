@@ -39,22 +39,32 @@ export default async function StaffDashboardPage({ searchParams }: StaffDashboar
   const windowDays = typeof windowSetting?.value === 'number' ? windowSetting.value : 3;
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">予約表</h1>
-        <Link href="/admin/login" className="text-muted-foreground text-sm underline">
-          管理者ログイン
-        </Link>
+    <div className="flex min-h-screen flex-col">
+      <header className="bg-primary text-primary-foreground">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+          <div className="flex items-center gap-2.5">
+            <span className="bg-gold size-2 rounded-full" />
+            <h1 className="text-lg font-bold tracking-tight sm:text-xl">予約表</h1>
+          </div>
+          <Link
+            href="/admin/login"
+            className="text-primary-foreground/70 hover:text-gold text-sm underline underline-offset-4 transition-colors"
+          >
+            管理者ログイン
+          </Link>
+        </div>
       </header>
 
-      <ReservationBoard
-        dateStr={dateStr}
-        categories={categories}
-        reservations={reservations}
-        rooms={rooms}
-        windowDays={windowDays}
-        showCancelled={showCancelled}
-      />
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 p-4 sm:p-6">
+        <ReservationBoard
+          dateStr={dateStr}
+          categories={categories}
+          reservations={reservations}
+          rooms={rooms}
+          windowDays={windowDays}
+          showCancelled={showCancelled}
+        />
+      </div>
     </div>
   );
 }
