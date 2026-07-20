@@ -55,7 +55,17 @@ interface ReservationFormDialogProps {
   rooms: Pick<Room, 'id' | 'roomNumber'>[];
   windowDays: number;
   reservation?: Reservation;
-  trigger: ReactElement;
+  /** ボタン等をトリガーにする場合(通常の一覧からの利用) */
+  trigger?: ReactElement;
+  /**
+   * 外部から開閉を制御する場合(予約表グリッドの空き枠クリックなど)。
+   * 指定時はtriggerを描画せず、呼び出し側がopen/onOpenChangeで制御する。
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** 新規作成時に施設・日時をあらかじめ指定したい場合(予約表グリッドの空き枠クリック) */
+  defaultFacilityId?: string;
+  defaultStart?: { date: Date; time: string };
   onDone?: () => void;
 }
 
@@ -83,9 +93,15 @@ export function ReservationFormDialog({
   windowDays,
   reservation,
   trigger,
+  open: openProp,
+  onOpenChange,
+  defaultFacilityId,
+  defaultStart: defaultStartProp,
   onDone,
 }: ReservationFormDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = onOpenChange ?? setOpenState;
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   const initialStart = reservation
@@ -96,7 +112,7 @@ export function ReservationFormDialog({
           time: `${String(parts.hour).padStart(2, '0')}:${String(parts.minute).padStart(2, '0')}`,
         };
       })()
-    : getDefaultStart();
+    : (defaultStartProp ?? getDefaultStart());
 
   const [startDate, setStartDate] = useState<Date>(initialStart.date);
   const [startTime, setStartTime] = useState<string>(initialStart.time);
@@ -114,7 +130,7 @@ export function ReservationFormDialog({
         guestType: 'staying',
         roomId: undefined,
         guestName: '',
-        facilityId: '',
+        facilityId: defaultFacilityId ?? '',
         startAt: combineTokyoDateAndTime(initialStart.date, initialStart.time),
         note: '',
       };
@@ -138,7 +154,7 @@ export function ReservationFormDialog({
   }
 
   function resetForm() {
-    const next = reservation ? initialStart : getDefaultStart();
+    const next = reservation ? initialStart : (defaultStartProp ?? getDefaultStart());
     setStartDate(next.date);
     setStartTime(next.time);
     form.reset(defaultValues);
@@ -201,7 +217,7 @@ export function ReservationFormDialog({
         }
       }}
     >
-      <DialogTrigger render={trigger} />
+      {trigger ? <DialogTrigger render={trigger} /> : null}
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{reservation ? '予約内容の変更' : '新規予約'}</DialogTitle>
@@ -231,8 +247,9 @@ export function ReservationFormDialog({
                 <Button
                   key={type}
                   type="button"
+                  size="lg"
                   variant={guestType === type ? 'default' : 'outline'}
-                  className="flex-1"
+                  className="h-11 flex-1 text-base"
                   onClick={() => form.setValue('guestType', type, { shouldValidate: true })}
                 >
                   {GUEST_TYPE_LABELS[type]}
