@@ -1,0 +1,215 @@
+// docs/05-database-design.md に基づくスキーマ定義。
+// EXCLUDE制約(重複予約防止)・区分整合性のCHECK制約はPrismaで表現できないため、
+// prisma/manual-migrations/001_reservation_constraints.sql を別途適用する。
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum GuestType {
+  staying
+  before_checkin
+  after_checkout
+
+  @@map("guest_type")
+}
+
+enum ReservationStatus {
+  reserved
+  in_use
+  completed
+  cancelled
+
+  @@map("reservation_status")
+}
+
+enum ActorType {
+  staff
+  admin
+  system
+
+  @@map("actor_type")
+}
+
+enum NotificationType {
+  reminder_15min
+  cleaning_warning
+  facility_stopped
+  reservation_created
+  reservation_updated
+  reservation_cancelled
+
+  @@map("notification_type")
+}
+
+enum AuditEntityType {
+  reservation
+  facility
+  room
+  facility_closure
+  system_setting
+
+  @@map("audit_entity_type")
+}
+
+model FacilityCategory {
+  id           String     @id @default(uuid()) @db.Uuid
+  name         String     @unique
+  displayOrder Int        @default(0) @map("display_order")
+  facilities   Facility[]
+
+  @@map("facility_categories")
+}
+
+model Facility {
+  id                String           @id @default(uuid()) @db.Uuid
+  categoryId        String           @map("category_id") @db.Uuid
+  category          FacilityCategory @relation(fields: [categoryId], references: [id])
+  name              String           @unique
+  durationMinutes   Int              @map("duration_minutes")
+  displayOrder      Int              @default(0) @map("display_order")
+  color             String           @default("#999999")
+  hasCleaning       Boolean          @default(false) @map("has_cleaning")
+  isCleaning        Boolean          @default(false) @map("is_cleaning")
+  cleaningStartedAt DateTime?        @map("cleaning_started_at") @db.Timestamptz
+  description       String?
+  adminNote         String?          @map("admin_note")
+  isActive          Boolean          @default(true) @map("is_active")
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  reservations  Reservation[]
+  closures      FacilityClosure[]
+  notifications Notification[]
+
+  @@index([isActive, displayOrder])
+  @@map("facilities")
+}
+
+model Room {
+  id           String   @id @default(uuid()) @db.Uuid
+  roomNumber   String   @unique @map("room_number")
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  reservations Reservation[]
+
+  @@map("rooms")
+}
+
+model AdminUser {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  displayName  String   @map("display_name")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  createdReservations  Reservation[]     @relation("ReservationCreatedByAdmin")
+  createdClosures      FacilityClosure[] @relation("ClosureCreatedByAdmin")
+  releasedClosures     FacilityClosure[] @relation("ClosureReleasedByAdmin")
+  auditLogs            AuditLog[]
+  systemSettingUpdates SystemSetting[]
+
+  @@map("admin_users")
+}
+
+model Reservation {
+  id               String            @id @default(uuid()) @db.Uuid
+  facilityId       String            @map("facility_id") @db.Uuid
+  facility         Facility          @relation(fields: [facilityId], references: [id])
+  guestType        GuestType         @map("guest_type")
+  roomId           String?           @map("room_id") @db.Uuid
+  room             Room?             @relation(fields: [roomId], references: [id])
+  guestName        String?           @map("guest_name")
+  startAt          DateTime          @map("start_at") @db.Timestamptz
+  endAt            DateTime          @map("end_at") @db.Timestamptz
+  status           ReservationStatus @default(reserved)
+  note             String?
+  createdByType    ActorType         @map("created_by_type")
+  createdByAdminId String?           @map("created_by_admin_id") @db.Uuid
+  createdByAdmin   AdminUser?        @relation("ReservationCreatedByAdmin", fields: [createdByAdminId], references: [id])
+  cancelReason     String?           @map("cancel_reason")
+  lockVersion      Int               @default(0) @map("lock_version")
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+
+  notifications Notification[]
+
+  @@index([facilityId, startAt])
+  @@index([status])
+  @@index([roomId])
+  @@map("reservations")
+}
+
+model FacilityClosure {
+  id                String     @id @default(uuid()) @db.Uuid
+  facilityId        String     @map("facility_id") @db.Uuid
+  facility          Facility   @relation(fields: [facilityId], references: [id])
+  startAt           DateTime   @map("start_at") @db.Timestamptz
+  endAt             DateTime?  @map("end_at") @db.Timestamptz
+  isIndefinite      Boolean    @default(false) @map("is_indefinite")
+  reason            String
+  createdByAdminId  String     @map("created_by_admin_id") @db.Uuid
+  createdByAdmin    AdminUser  @relation("ClosureCreatedByAdmin", fields: [createdByAdminId], references: [id])
+  createdAt         DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  releasedAt        DateTime?  @map("released_at") @db.Timestamptz
+  releasedByAdminId String?    @map("released_by_admin_id") @db.Uuid
+  releasedByAdmin   AdminUser? @relation("ClosureReleasedByAdmin", fields: [releasedByAdminId], references: [id])
+
+  @@index([facilityId, releasedAt])
+  @@map("facility_closures")
+}
+
+model Notification {
+  id            String           @id @default(uuid()) @db.Uuid
+  type          NotificationType
+  facilityId    String?          @map("facility_id") @db.Uuid
+  facility      Facility?        @relation(fields: [facilityId], references: [id])
+  reservationId String?          @map("reservation_id") @db.Uuid
+  reservation   Reservation?     @relation(fields: [reservationId], references: [id])
+  title         String
+  body          String
+  isRead        Boolean          @default(false) @map("is_read")
+  readAt        DateTime?        @map("read_at") @db.Timestamptz
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([createdAt(sort: Desc)])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id           String          @id @default(uuid()) @db.Uuid
+  entityType   AuditEntityType @map("entity_type")
+  entityId     String          @map("entity_id") @db.Uuid
+  action       String
+  actorType    ActorType       @map("actor_type")
+  actorAdminId String?         @map("actor_admin_id") @db.Uuid
+  actorAdmin   AdminUser?      @relation(fields: [actorAdminId], references: [id])
+  reason       String?
+  beforeData   Json?           @map("before_data")
+  afterData    Json?           @map("after_data")
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([entityType, entityId, createdAt(sort: Desc)])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  key              String     @id
+  value            Json
+  updatedAt        DateTime   @default(now()) @map("updated_at") @db.Timestamptz
+  updatedByAdminId String?    @map("updated_by_admin_id") @db.Uuid
+  updatedByAdmin   AdminUser? @relation(fields: [updatedByAdminId], references: [id])
+
+  @@map("system_settings")
+}
