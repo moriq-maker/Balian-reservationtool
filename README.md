@@ -24,8 +24,8 @@ npm install
 ### 2. Supabaseプロジェクトの準備
 
 1. [Supabase](https://supabase.com/)で開発用プロジェクトを作成する(無料枠で開始可能)。
-2. Project Settings > Database から接続文字列(Connection string, "Session pooler"推奨)を取得する。
-3. Project Settings > API から `URL` と `anon public key` を取得する。
+2. ダッシュボード右上の「Connect」→「ORMs」→「Prisma」から `DATABASE_URL`(トランザクションプーラー)と `DIRECT_URL`(セッションプーラー、マイグレーション用)をまとめて取得する。
+3. Project Settings > API Keys から `Project URL` と `anon public` キーを取得する。
 
 ### 3. 環境変数の設定
 
@@ -56,7 +56,7 @@ npx prisma migrate dev
 npx prisma db seed
 ```
 
-施設6件・部屋番号58件・システム設定(予約可能日数など)・管理者アカウント1件が投入されます。**シードで作成される管理者パスワードは仮のものなので、本番投入前に必ず変更してください。**
+施設6件・部屋番号55件・システム設定(予約可能日数など)・管理者アカウント1件が投入されます。**シードで作成される管理者パスワードは仮のものなので、本番投入前に必ず変更してください。**
 
 ### 6. 開発サーバーの起動
 

@@ -1,10 +1,5 @@
 -- docs/05-database-design.md 2-5章に基づく追加制約。
--- Prismaのスキーマ言語では表現できないため、`prisma migrate dev --name init` で
--- 基本テーブルを作成した後、以下の手順で追加する。
---
--- 1. npx prisma migrate dev --create-only --name reservation_constraints
--- 2. 生成された空の migration.sql の中身を、このファイルの内容で置き換える
--- 3. npx prisma migrate dev で適用する
+-- 内容は prisma/manual-migrations/001_reservation_constraints.sql と同一。
 
 -- 重複予約防止のためのGiSTインデックスにfacility_id(UUID)を使えるようにする拡張
 CREATE EXTENSION IF NOT EXISTS btree_gist;

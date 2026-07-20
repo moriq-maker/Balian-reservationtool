@@ -69,7 +69,7 @@ flowchart LR
 
 1. Prismaでスキーマ定義 → `prisma migrate dev`でマイグレーション生成
 2. `EXCLUDE`制約など Prisma未対応のDDLを手動SQLで追加
-3. シードスクリプトで初期データ投入:施設6件、部屋番号58件、`system_settings`初期値、管理者アカウント1件
+3. シードスクリプトで初期データ投入:施設6件、部屋番号55件、`system_settings`初期値、管理者アカウント1件
 
 ## 5. 自動処理(Cron)設定
 

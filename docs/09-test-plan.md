@@ -56,4 +56,4 @@
 
 ## 6. テストデータ
 
-開発環境の初期データ([01-requirements.md](01-requirements.md)、[05-database-design.md](05-database-design.md)参照)を用いて、施設6件・部屋番号58件が揃った状態でテストを実施する。
+開発環境の初期データ([01-requirements.md](01-requirements.md)、[05-database-design.md](05-database-design.md)参照)を用いて、施設6件・部屋番号55件が揃った状態でテストを実施する。

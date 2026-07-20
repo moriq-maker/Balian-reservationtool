@@ -160,7 +160,7 @@ erDiagram
 | created_at | timestamptz | NOT NULL | now() | - |
 | updated_at | timestamptz | NOT NULL | now() | - |
 
-初期データ:要件書58室。**論理削除あり**。
+初期データ:要件書の部屋番号一覧(55室)。**論理削除あり**。
 
 ### 2-4. admin_users(管理者アカウント)
 
@@ -214,12 +214,12 @@ CREATE EXTENSION IF NOT EXISTS btree_gist;
 ALTER TABLE reservations ADD CONSTRAINT excl_reservation_overlap
   EXCLUDE USING gist (
     facility_id WITH =,
-    tsrange(start_at, end_at, '[)') WITH &&
+    tstzrange(start_at, end_at, '[)') WITH &&
   )
   WHERE (status <> 'cancelled');
 ```
 
-- `tsrange(start_at, end_at, '[)')`:開始時刻を含み終了時刻を含まない半開区間として重複判定([05-database-design.md 内]の`newStart < existingEnd AND newEnd > existingStart`と等価)。
+- `tstzrange(start_at, end_at, '[)')`:`start_at`/`end_at`が`timestamptz`型のため、`timestamp`用の`tsrange`ではなくタイムゾーン付き範囲型の`tstzrange`を使う。開始時刻を含み終了時刻を含まない半開区間として重複判定([05-database-design.md 内]の`newStart < existingEnd AND newEnd > existingStart`と等価)。
 - `WHERE (status <> 'cancelled')`:PostgreSQLの部分EXCLUDE制約により、**キャンセル済み予約は制約の対象外**になる。
 - 同時に2端末が同じ枠を確定しようとした場合、後からコミットした側がこの制約違反(`23P01 exclusion_violation`)でDBレベルに拒否される。アプリ層はこのエラーを検知し、日本語メッセージへ変換する。
 
